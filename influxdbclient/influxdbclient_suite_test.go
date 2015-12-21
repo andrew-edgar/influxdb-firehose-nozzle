@@ -1,4 +1,4 @@
-package datadogclient_test
+package influxdbclient_test
 
 import (
 	. "github.com/onsi/ginkgo"

@@ -1,4 +1,4 @@
-package datadogclient_test
+package influxdbclient_test
 
 import (
 	"encoding/json"
@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/cloudfoundry/gosteno"
+	"github.com/evoila/influxdb-firehose-nozzle/datadogclient"
+
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/cloudfoundry-incubator/datadog-firehose-nozzle/datadogclient"
 )
 
 var (

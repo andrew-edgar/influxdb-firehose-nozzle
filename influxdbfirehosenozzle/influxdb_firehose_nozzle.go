@@ -1,25 +1,25 @@
-package datadogfirehosenozzle
+package influxdbfirehosenozzle
 
 import (
 	"crypto/tls"
 	"time"
 
-	"github.com/cloudfoundry-incubator/datadog-firehose-nozzle/datadogclient"
-	"github.com/cloudfoundry-incubator/datadog-firehose-nozzle/nozzleconfig"
 	"github.com/cloudfoundry/gosteno"
 	"github.com/cloudfoundry/noaa/consumer"
 	"github.com/cloudfoundry/sonde-go/events"
+	"github.com/evoila/influxdb-firehose-nozzle/influxdbclient"
+	"github.com/evoila/influxdb-firehose-nozzle/nozzleconfig"
 	"github.com/gorilla/websocket"
 	"github.com/pivotal-golang/localip"
 )
 
-type DatadogFirehoseNozzle struct {
+type InfluxDbFirehoseNozzle struct {
 	config           *nozzleconfig.NozzleConfig
 	errs             <-chan error
 	messages         <-chan *events.Envelope
 	authTokenFetcher AuthTokenFetcher
 	consumer         *consumer.Consumer
-	client           *datadogclient.Client
+	client           *influxdbclient.Client
 	log              *gosteno.Logger
 }
 
@@ -27,22 +27,22 @@ type AuthTokenFetcher interface {
 	FetchAuthToken() string
 }
 
-func NewDatadogFirehoseNozzle(config *nozzleconfig.NozzleConfig, tokenFetcher AuthTokenFetcher, log *gosteno.Logger) *DatadogFirehoseNozzle {
-	return &DatadogFirehoseNozzle{
+func NewInfluxDbFirehoseNozzle(config *nozzleconfig.NozzleConfig, tokenFetcher AuthTokenFetcher, log *gosteno.Logger) *InfluxDbFirehoseNozzle {
+	return &InfluxDbFirehoseNozzle{
 		config:           config,
 		authTokenFetcher: tokenFetcher,
 		log:              log,
 	}
 }
 
-func (d *DatadogFirehoseNozzle) Start() error {
+func (d *InfluxDbFirehoseNozzle) Start() error {
 	var authToken string
 
 	if !d.config.DisableAccessControl {
 		authToken = d.authTokenFetcher.FetchAuthToken()
 	}
 
-	d.log.Info("Starting DataDog Firehose Nozzle...")
+	d.log.Info("Starting InfluxDb Firehose Nozzle...")
 	d.createClient()
 	d.consumeFirehose(authToken)
 	err := d.postToDatadog()
@@ -50,15 +50,17 @@ func (d *DatadogFirehoseNozzle) Start() error {
 	return err
 }
 
-func (d *DatadogFirehoseNozzle) createClient() {
+func (d *InfluxDbFirehoseNozzle) createClient() {
 	ipAddress, err := localip.LocalIP()
 	if err != nil {
 		panic(err)
 	}
 
-	d.client = datadogclient.New(
-		d.config.DataDogURL,
-		d.config.DataDogAPIKey,
+	d.client = influxdbclient.New(
+		d.config.InfluxDbUrl,
+		d.config.InfluxDbDatabase,
+		d.config.InfluxDbUser,
+		d.config.InfluxDbPassword,
 		d.config.MetricPrefix,
 		d.config.Deployment,
 		ipAddress,
@@ -66,7 +68,7 @@ func (d *DatadogFirehoseNozzle) createClient() {
 	)
 }
 
-func (d *DatadogFirehoseNozzle) consumeFirehose(authToken string) {
+func (d *InfluxDbFirehoseNozzle) consumeFirehose(authToken string) {
 	d.consumer = consumer.New(
 		d.config.TrafficControllerURL,
 		&tls.Config{InsecureSkipVerify: d.config.InsecureSSLSkipVerify},
@@ -75,7 +77,7 @@ func (d *DatadogFirehoseNozzle) consumeFirehose(authToken string) {
 	d.messages, d.errs = d.consumer.Firehose(d.config.FirehoseSubscriptionID, authToken)
 }
 
-func (d *DatadogFirehoseNozzle) postToDatadog() error {
+func (d *InfluxDbFirehoseNozzle) postToDatadog() error {
 	ticker := time.NewTicker(time.Duration(d.config.FlushDurationSeconds) * time.Second)
 	for {
 		select {
@@ -91,14 +93,14 @@ func (d *DatadogFirehoseNozzle) postToDatadog() error {
 	}
 }
 
-func (d *DatadogFirehoseNozzle) postMetrics() {
+func (d *InfluxDbFirehoseNozzle) postMetrics() {
 	err := d.client.PostMetrics()
 	if err != nil {
 		d.log.Fatalf("FATAL ERROR: %s\n\n", err)
 	}
 }
 
-func (d *DatadogFirehoseNozzle) handleError(err error) {
+func (d *InfluxDbFirehoseNozzle) handleError(err error) {
 	switch closeErr := err.(type) {
 	case *websocket.CloseError:
 		switch closeErr.Code {
@@ -121,7 +123,7 @@ func (d *DatadogFirehoseNozzle) handleError(err error) {
 	d.postMetrics()
 }
 
-func (d *DatadogFirehoseNozzle) handleMessage(envelope *events.Envelope) {
+func (d *InfluxDbFirehoseNozzle) handleMessage(envelope *events.Envelope) {
 	if envelope.GetEventType() == events.Envelope_CounterEvent && envelope.CounterEvent.GetName() == "TruncatingBuffer.DroppedMessages" && envelope.GetOrigin() == "doppler" {
 		d.log.Infof("We've intercepted an upstream message which indicates that the nozzle or the TrafficController is not keeping up. Please try scaling up the nozzle.")
 		d.client.AlertSlowConsumerError()
