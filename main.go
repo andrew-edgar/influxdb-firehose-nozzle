@@ -2,6 +2,9 @@ package main
 
 import (
 	"flag"
+	"io"
+	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -43,6 +46,25 @@ func main() {
 
 	influxDbNozzle := influxdbfirehosenozzle.NewInfluxDbFirehoseNozzle(config, tokenFetcher, log)
 	influxDbNozzle.Start()
+
+	runServer()
+}
+
+func defaultResponse(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "{ \"status\" : \"running\" }")
+}
+
+func runServer() {
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "8000"
+	}
+
+	log.Print("Starting server with port: " + port)
+
+	http.HandleFunc("/", defaultResponse)
+	http.ListenAndServe(":"+port, nil)
 }
 
 func registerGoRoutineDumpSignalChannel() chan os.Signal {
