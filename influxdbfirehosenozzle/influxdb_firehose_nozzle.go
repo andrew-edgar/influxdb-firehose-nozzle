@@ -2,6 +2,7 @@ package influxdbfirehosenozzle
 
 import (
 	"crypto/tls"
+	"log"
 	"time"
 
 	"github.com/cloudfoundry/gosteno"
@@ -45,8 +46,9 @@ func (d *InfluxDbFirehoseNozzle) Start() error {
 	d.log.Info("Starting InfluxDb Firehose Nozzle...")
 	d.createClient()
 	d.consumeFirehose(authToken)
-	err := d.postToDatadog()
-	d.log.Info("DataDog Firehose Nozzle shutting down...")
+	err := d.postToInfluxDb()
+	d.log.Info("InfluxDb Firehose Nozzle shutting down...")
+	log.Print()
 	return err
 }
 
@@ -77,7 +79,7 @@ func (d *InfluxDbFirehoseNozzle) consumeFirehose(authToken string) {
 	d.messages, d.errs = d.consumer.Firehose(d.config.FirehoseSubscriptionID, authToken)
 }
 
-func (d *InfluxDbFirehoseNozzle) postToDatadog() error {
+func (d *InfluxDbFirehoseNozzle) postToInfluxDb() error {
 	ticker := time.NewTicker(time.Duration(d.config.FlushDurationSeconds) * time.Second)
 	for {
 		select {
