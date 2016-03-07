@@ -2,15 +2,11 @@ package influxdbclient
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 	"time"
-
-	"errors"
 
 	"github.com/cloudfoundry/gosteno"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -57,10 +53,6 @@ type Point struct {
 }
 
 func New(url string, database string, user string, password string, allowSelfSigned bool, prefix string, deployment string, ip string, log *gosteno.Logger) *Client {
-	ourTags := []string{
-		"deployment:" + deployment,
-		"ip:" + ip,
-	}
 	return &Client{
 		url:             url,
 		database:        database,
@@ -72,7 +64,6 @@ func New(url string, database string, user string, password string, allowSelfSig
 		deployment:      deployment,
 		ip:              ip,
 		log:             log,
-		tagsHash:        hashTags(ourTags),
 	}
 }
 
@@ -90,7 +81,6 @@ func (c *Client) AddMetric(envelope *events.Envelope) {
 	key := metricKey{
 		eventType: envelope.GetEventType(),
 		name:      getName(envelope),
-		tagsHash:  hashTags(tags),
 	}
 
 	mVal := c.metricPoints[key]
@@ -268,36 +258,4 @@ func appendTagIfNotEmpty(tags []string, key, value string) []string {
 		tags = append(tags, fmt.Sprintf("%s=%s", key, value))
 	}
 	return tags
-}
-
-func (p Point) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`[%d, %f]`, p.Timestamp, p.Value)), nil
-}
-
-func (p *Point) UnmarshalJSON(in []byte) error {
-	var timestamp int64
-	var value float64
-
-	parsed, err := fmt.Sscanf(string(in), `[%d,%f]`, &timestamp, &value)
-	if err != nil {
-		return err
-	}
-	if parsed != 2 {
-		return errors.New("expected two parsed values")
-	}
-
-	p.Timestamp = timestamp
-	p.Value = value
-
-	return nil
-}
-
-func hashTags(tags []string) string {
-	sort.Strings(tags)
-	hash := ""
-	for _, tag := range tags {
-		tagHash := sha1.Sum([]byte(tag))
-		hash += string(tagHash[:])
-	}
-	return hash
 }
