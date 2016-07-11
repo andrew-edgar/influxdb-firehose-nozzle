@@ -19,7 +19,7 @@ import (
 var (
 	logFilePath = flag.String("logFile", "", "The agent log file, defaults to STDOUT")
 	logLevel    = flag.Bool("debug", false, "Debug logging")
-	configFile  = flag.String("config", "config/datadog-firehose-nozzle.json", "Location of the nozzle config json file")
+	configFile  = flag.String("config", "config/influxdb-firehose-nozzle.json", "Location of the nozzle config json file")
 )
 
 func main() {
@@ -32,13 +32,7 @@ func main() {
 		log.Fatalf("Error parsing config: %s", err.Error())
 	}
 
-	tokenFetcher := &uaatokenfetcher.UAATokenFetcher{
-		UaaUrl:                config.UAAURL,
-		Username:              config.Username,
-		Password:              config.Password,
-		InsecureSSLSkipVerify: config.SsLSkipVerify,
-		Logger:                log,
-	}
+	tokenFetcher := uaatokenfetcher.New(config.UAAURL, config.Username, config.Password, config.SsLSkipVerify, log)
 
 	threadDumpChan := registerGoRoutineDumpSignalChannel()
 	defer close(threadDumpChan)

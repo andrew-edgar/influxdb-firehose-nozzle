@@ -2,9 +2,12 @@ package influxdbclient
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -81,6 +84,7 @@ func (c *Client) AddMetric(envelope *events.Envelope) {
 	key := metricKey{
 		eventType: envelope.GetEventType(),
 		name:      getName(envelope),
+		tagsHash:  hashTags(tags),
 	}
 
 	mVal := c.metricPoints[key]
@@ -91,6 +95,8 @@ func (c *Client) AddMetric(envelope *events.Envelope) {
 		Timestamp: envelope.GetTimestamp() / int64(time.Second),
 		Value:     value,
 	})
+
+	// c.log.Infof("got-metric(%s): %v", key, mVal)
 
 	c.metricPoints[key] = mVal
 }
@@ -116,7 +122,11 @@ func (c *Client) PostMetrics() error {
 
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 || resp.StatusCode < 200 {
-		return fmt.Errorf("InfluxDB request returned HTTP response: %s", resp.Status)
+		errBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Can't read response body: %s", resp.Status)
+		}
+		return fmt.Errorf("InfluxDB request returned HTTP response: %s;\n%s", resp.Status, string(errBody))
 	}
 
 	c.totalMetricsSent += metricsCount
@@ -153,9 +163,12 @@ func (c *Client) formatMetrics() ([]byte, uint64) {
 	var buffer bytes.Buffer
 
 	for key, mVal := range c.metricPoints {
+		mVal.tags = append(mVal.tags, "potato=face")
 		buffer.WriteString(c.prefix + key.name)
-		buffer.WriteString(",")
-		buffer.WriteString(formatTags(mVal.tags))
+		if len(mVal.tags) > 0 {
+			buffer.WriteString(",")
+			buffer.WriteString(formatTags(mVal.tags))
+		}
 		buffer.WriteString(" ")
 		buffer.WriteString(formatValues(mVal.points))
 		buffer.WriteString(" ")
@@ -258,4 +271,14 @@ func appendTagIfNotEmpty(tags []string, key, value string) []string {
 		tags = append(tags, fmt.Sprintf("%s=%s", key, value))
 	}
 	return tags
+}
+
+func hashTags(tags []string) string {
+	sort.Strings(tags)
+	hash := ""
+	for _, tag := range tags {
+		tagHash := sha1.Sum([]byte(tag))
+		hash += string(tagHash[:])
+	}
+	return hash
 }
