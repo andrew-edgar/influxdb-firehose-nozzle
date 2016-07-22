@@ -10,10 +10,10 @@ import (
 	"runtime/pprof"
 	"syscall"
 
-	"github.com/evoila/influxdb-firehose-nozzle/influxdbfirehosenozzle"
-	"github.com/evoila/influxdb-firehose-nozzle/logger"
-	"github.com/evoila/influxdb-firehose-nozzle/nozzleconfig"
-	"github.com/evoila/influxdb-firehose-nozzle/uaatokenfetcher"
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/influxdbfirehosenozzle"
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/logger"
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/nozzleconfig"
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/uaatokenfetcher"
 )
 
 var (

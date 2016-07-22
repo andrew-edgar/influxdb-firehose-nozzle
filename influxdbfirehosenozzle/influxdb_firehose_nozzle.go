@@ -5,11 +5,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/influxdbclient"
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/nozzleconfig"
 	"github.com/cloudfoundry/gosteno"
 	"github.com/cloudfoundry/noaa/consumer"
 	"github.com/cloudfoundry/sonde-go/events"
-	"github.com/evoila/influxdb-firehose-nozzle/influxdbclient"
-	"github.com/evoila/influxdb-firehose-nozzle/nozzleconfig"
 	"github.com/gorilla/websocket"
 	"github.com/pivotal-golang/localip"
 )

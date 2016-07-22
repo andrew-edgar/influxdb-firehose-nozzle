@@ -1,9 +1,9 @@
 package uaatokenfetcher_test
 
 import (
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/testhelpers"
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/uaatokenfetcher"
 	"github.com/cloudfoundry/gosteno"
-	"github.com/evoila/influxdb-firehose-nozzle/testhelpers"
-	"github.com/evoila/influxdb-firehose-nozzle/uaatokenfetcher"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

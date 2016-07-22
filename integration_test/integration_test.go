@@ -7,13 +7,14 @@ import (
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/evoila/influxdb-firehose-nozzle/datadogclient"
-	. "github.com/evoila/influxdb-firehose-nozzle/testhelpers"
+	"os"
+	"strings"
+
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/datadogclient"
+	. "github.com/andrew-edgar/influxdb-firehose-nozzle/testhelpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"os"
-	"strings"
 )
 
 var _ = Describe("DatadogFirehoseNozzle", func() {

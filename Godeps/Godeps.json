@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/evoila/influxdb-firehose-nozzle",
+	"ImportPath": "github.com/andrew-edgar/influxdb-firehose-nozzle",
 	"GoVersion": "go1.6",
 	"GodepVersion": "v74",
 	"Deps": [

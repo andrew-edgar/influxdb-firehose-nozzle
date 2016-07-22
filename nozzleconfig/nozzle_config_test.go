@@ -1,10 +1,11 @@
 package nozzleconfig_test
 
 import (
-	"github.com/evoila/influxdb-firehose-nozzle/nozzleconfig"
+	"os"
+
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/nozzleconfig"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
 )
 
 var _ = Describe("NozzleConfig", func() {

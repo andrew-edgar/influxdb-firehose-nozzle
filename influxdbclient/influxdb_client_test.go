@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/andrew-edgar/influxdb-firehose-nozzle/influxdbclient"
 	"github.com/cloudfoundry-incubator/datadog-firehose-nozzle/datadogclient"
-	"github.com/evoila/influxdb-firehose-nozzle/influxdbclient"
 
 	"github.com/cloudfoundry/gosteno"
 	"github.com/cloudfoundry/sonde-go/events"
