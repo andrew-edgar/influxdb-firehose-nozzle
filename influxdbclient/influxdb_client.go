@@ -92,7 +92,7 @@ func (c *Client) AddMetric(envelope *events.Envelope) {
 
 	mVal.tags = tags
 	mVal.points = append(mVal.points, Point{
-		Timestamp: envelope.GetTimestamp() / int64(time.Second),
+		Timestamp: envelope.GetTimestamp(),
 		Value:     value,
 	})
 
@@ -163,17 +163,18 @@ func (c *Client) formatMetrics() ([]byte, uint64) {
 	var buffer bytes.Buffer
 
 	for key, mVal := range c.metricPoints {
-		mVal.tags = append(mVal.tags, "potato=face")
-		buffer.WriteString(c.prefix + key.name)
-		if len(mVal.tags) > 0 {
-			buffer.WriteString(",")
-			buffer.WriteString(formatTags(mVal.tags))
+		for _, point := range mVal.points {
+			buffer.WriteString(c.prefix + key.name)
+			if len(mVal.tags) > 0 {
+				buffer.WriteString(",")
+				buffer.WriteString(formatTags(mVal.tags))
+			}
+			buffer.WriteString(" ")
+			buffer.WriteString(formatValues(point))
+			buffer.WriteString(" ")
+			buffer.WriteString(formatTimestamp(point))
+			buffer.WriteString("\n")
 		}
-		buffer.WriteString(" ")
-		buffer.WriteString(formatValues(mVal.points))
-		buffer.WriteString(" ")
-		buffer.WriteString(formatTimestamp(mVal.points))
-		buffer.WriteString("\n")
 	}
 
 	return buffer.Bytes(), uint64(len(c.metricPoints))
@@ -191,24 +192,12 @@ func formatTags(tags []string) string {
 	return newTags
 }
 
-func formatValues(points []Point) string {
-	var newPoints string
-	for index, point := range points {
-		if index > 0 {
-			newPoints += ","
-		}
-
-		newPoints += "value=" + strconv.FormatFloat(point.Value, 'f', -1, 64)
-	}
-	return newPoints
+func formatValues(point Point) string {
+	return "value=" + strconv.FormatFloat(point.Value, 'f', -1, 64)
 }
 
-func formatTimestamp(points []Point) string {
-	if len(points) > 0 {
-		return strconv.FormatInt(points[0].Timestamp*1000*1000*1000, 10)
-	} else {
-		return strconv.FormatInt(time.Now().Unix()*1000*1000*1000, 10)
-	}
+func formatTimestamp(point Point) string {
+	return strconv.FormatInt(point.Timestamp, 10)
 }
 
 func (c *Client) addInternalMetric(name string, value uint64) {
