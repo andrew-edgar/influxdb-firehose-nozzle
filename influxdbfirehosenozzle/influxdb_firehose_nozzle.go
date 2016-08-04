@@ -47,7 +47,7 @@ func (d *InfluxDbFirehoseNozzle) Start() error {
 	d.createClient()
 	d.consumeFirehose(authToken)
 	err := d.postToInfluxDb()
-	d.log.Info("InfluxDb Firehose Nozzle shutting down...")
+	d.log.Infof("InfluxDb Firehose Nozzle shutting down... %s", err.Error())
 	log.Print()
 	return err
 }

@@ -8,7 +8,6 @@
   "InfluxDbDatabase": "cloudfoundry",
   "InfluxDbUser": "root",
   "InfluxDbPassword": "root",
-  "InfluxDbAllowSelfSigned": true,
   "FlushDurationSeconds": 15,
   "SsLSkipVerify": true,
   "MetricPrefix": "cf.",
